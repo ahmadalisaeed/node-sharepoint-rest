@@ -32,6 +32,8 @@ With it now installed in your project:
   - [createList(req, cb)](#createlist)
   - [createColumnForListByGUID(req, cb)](#createcolumnforlistbyguid)
   - [addListItemByTitle(listTitle, cb)](#addlistitembytitle)
+  - [editListItemByTitle(listTitle, cb)](#editlistitembytitle)
+  - [deleteListItemByTitle(listTitle, cb)](#deletelistitembytitle)
   - [addAttachmentToListItem(req, cb)](#addattachment)
 
 ##### getContext
@@ -297,31 +299,23 @@ The "..." indicates a continuation:
 ----
 
 ##### addListItemByTitle
-is a prototype function for adding an item to a custom list.  This fn takes a list title string, an item object
-(containing the list type in its __metadata), the app context, and a callback (err, newItem), where newItem is
+is a prototype function for adding an item to a custom list.  This fn takes a list title string, an item object, the app context, and a callback (err, newItem), where newItem is
 the new item from SharePoint.
 
     list = 'customList'
-    sharePoint.getListTypeByTitle list, (err, type)->
+    sharePoint.getContext list, (err, context)->
       if err
         console.log err
         return
 
-      sharePoint.getContext list, (err, context)->
+      item =
+        Title: "My New Item " + Math.random()
+
+      sharePoint.addListItemByTitle list, item, context, (err, newItem)->
         if err
           console.log err
-          return
-
-        item =
-          __metadata:
-            type: type
-          Title: "My New Item " + Math.random()
-
-        sharePoint.addListItemByTitle list, item, context, (err, newItem)->
-          if err
-            console.log err
-          else
-            console.log newItem
+        else
+          console.log newItem
 
 The data returned looks something like this.  The "..." indicates a continuation:
 ```javascript
@@ -336,6 +330,47 @@ The data returned looks something like this.  The "..." indicates a continuation
   }
 }
 ```
+###### [Back to top](#node-sharepoint-rest)
+----
+
+##### editListItemByTitle
+is a prototype function for editing an item to a custom list.  This fn takes a list title string, an item id, an item object, the app context, and a callback (err, editedItem), where editedItem is
+the new item from SharePoint. Sharepoint will merge the object you send with the one stored, ignoring any property not present in the item you send.
+
+    list = 'customList'
+    sharePoint.getContext list, (err, context)->
+      if err
+        console.log err
+        return
+
+      item =
+        Title: "My Edited Item " + Math.random()
+
+      sharePoint.editListItemByTitle list, id, item, context, (err, newItem)->
+        if err
+          console.log err
+        else
+          console.log newItem
+
+###### [Back to top](#node-sharepoint-rest)
+----
+
+##### deleteListItemByTitle
+is a prototype function for deleting an item to a custom list.  This fn takes a list title string, an item id, the app context, and a callback (err, jsonResponse), where jsonResponse is
+the responsse in JSON from SharePoint.
+
+    list = 'customList'
+    sharePoint.getContext list, (err, context)->
+      if err
+        console.log err
+        return
+
+      sharePoint.deleteListItemByTitle list, id, context, (err, jsonResponse)->
+        if err
+          console.log err
+        else
+          console.log jsonResponse
+
 ###### [Back to top](#node-sharepoint-rest)
 ----
 

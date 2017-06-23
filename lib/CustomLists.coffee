@@ -19,9 +19,12 @@ class CustomLists
     return @
 
   getListItemsByTitle: (title, cb)->
+    return @getListItemsByTitleWithQuery(title,'',cb)
+
+  getListItemsByTitleWithQuery: (title, query, cb)->
     processRequest = (err, res, body)->
       if !body || !JSON.parse(body).d
-        cb("no list of title : #{title}")
+        cb(body)
       else
         cb(err, JSON.parse(body).d.results)
 
@@ -29,7 +32,7 @@ class CustomLists
       headers:
         Accept: "application/json;odata=verbose"
       strictSSL: @settings.strictSSL
-      url: "#{@url}/_api/web/lists/getbytitle('#{title}')/items"
+      url: "#{@url}/_api/web/lists/getbytitle('#{title}')/items?#{query}"
 
     @request.get(config, processRequest).auth(@user, @pass, true)
 
@@ -100,6 +103,12 @@ class CustomLists
       else
         cb(err, JSON.parse(body).d)
 
+    itemPayload =
+      '__metadata':
+        'type': @getItemTypeForListName(title)
+
+    itemPayload = @merge(itemPayload,item)
+
     config =
       headers :
         "Accept": "application/json;odata=verbose"
@@ -107,7 +116,70 @@ class CustomLists
         "content-type": "application/json;odata=verbose"
       url: "#{@url}/_api/web/lists/getbytitle('#{title}')/items"
       strictSSL: @settings.strictSSL
-      body: JSON.stringify(item)
+      body: JSON.stringify(itemPayload)
+
+    @request.post(config, processRequest).auth(@user, @pass, true)
+
+    return @
+
+  editListItemByTitle: (title, id, item, context, cb)->
+    processRequest = (err, res, body)->
+      try
+        jsonBody = JSON.parse(body)
+      catch e
+        cb()
+        return
+
+      if jsonBody.error
+        console.log jsonBody
+        cb(jsonBody, null)
+      else
+        cb(err, JSON.parse(body).d)
+
+    itemPayload =
+      '__metadata':
+        'type': @getItemTypeForListName(title)
+
+    itemPayload = @merge(itemPayload,item)
+
+    config =
+      headers :
+        "Accept": "application/json;odata=verbose"
+        "X-RequestDigest": context
+        "content-type": "application/json;odata=verbose"
+        "X-HTTP-Method": "MERGE"
+        "If-Match": "*"
+      url: "#{@url}/_api/web/lists/getbytitle('#{title}')/items(#{id})"
+      strictSSL: @settings.strictSSL
+      body: JSON.stringify(itemPayload)
+
+    @request.post(config, processRequest).auth(@user, @pass, true)
+
+    return @
+
+  deleteListItemByTitle: (title, id, context, cb)->
+    processRequest = (err, res, body)->
+      try
+        jsonBody = JSON.parse(body)
+      catch e
+        cb()
+        return
+
+      if jsonBody.error
+        console.log jsonBody
+        cb(jsonBody, null)
+      else
+        cb(err, JSON.parse(body))
+
+    config =
+      headers :
+        "Accept": "application/json;odata=verbose"
+        "X-RequestDigest": context
+        "content-type": "application/json;odata=verbose"
+        "X-HTTP-Method": "DELETE"
+        "If-Match": "*"
+      url: "#{@url}/_api/web/lists/getbytitle('#{title}')/items(#{id})"
+      strictSSL: @settings.strictSSL
 
     @request.post(config, processRequest).auth(@user, @pass, true)
 
@@ -251,5 +323,14 @@ class CustomLists
     @request.post(config, processRequest).auth(@user, @pass, true)
 
     return @
+
+  getItemTypeForListName :(name) ->
+    "SP.Data." + name.charAt(0).toUpperCase() + name.slice(1) + "ListItem"
+
+  merge: (xs...) ->
+    if xs?.length > 0
+      @tap {}, (m)->m[k] = v for k,v of x for x in xs
+
+  tap: (o, fn)-> fn(o); o
 
 module.exports = CustomLists
