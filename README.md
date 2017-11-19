@@ -11,8 +11,8 @@ On Premise SharePoint 2013 REST API wrapper.  Requires basic auth to be enabled 
 With it now installed in your project:
 
     settings =
-        user      : "node"
-        pass      : "password"
+        username      : "node"
+        password      : "password"
         url       : "https://sharepoint/subsite"
         strictSSL : false
 
