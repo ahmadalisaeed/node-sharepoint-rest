@@ -1,5 +1,3 @@
-require('coffee-script').register();
-
-SharePoint = require('./lib/SharePoint.coffee')
+SharePoint = require('./lib/SharePoint.js')
 
 module.exports = SharePoint
